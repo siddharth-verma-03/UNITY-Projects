@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 874c95de2568412439f7cb1ff2f7f22f
+labels:
+- gvh
+- gvh_version-9.6.0
+- gvhp_exportpath-GoogleMobileAds/Editor/PListProcessor.cs
+timeCreated: 1480838400
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon:
+    instanceID: 0
+  userData:
+  assetBundleName:
+  assetBundleVariant:

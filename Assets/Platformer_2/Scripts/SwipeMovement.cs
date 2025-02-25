@@ -5,6 +5,12 @@ public class SwipeMovement : MonoBehaviour
 
     private Vector3 targetPosition; // The position the player should move to
     private Touch touch;
+
+    Vector3 initialPos;
+    private void Start()
+    {
+        initialPos = this.transform.position;
+    }
     void FixedUpdate()
     {
      /*   // Check for touch input
@@ -35,5 +41,11 @@ public class SwipeMovement : MonoBehaviour
             }
         }
       
+    }
+
+
+    public void resetPosition()
+    {
+        this.transform.position = initialPos;
     }
 }

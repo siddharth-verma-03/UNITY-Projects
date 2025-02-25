@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+guid: 61511a78d4ec93a4eb64a21efab81d9d
+labels:
+- gvh
+- gvh_version-9.6.0
+- gvhp_exportpath-GoogleMobileAds/Editor/GoogleMobileAds.Editor.asmdef
+timeCreated: 1480838400
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData:
+  assetBundleName:
+  assetBundleVariant:

@@ -21,7 +21,7 @@ public class KillMe : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Obstacle"))
         {
-            Debug.LogError(CurrentNum.characterNum);
+     
             CurrentNum.characterNum--;
             GameObject.FindGameObjectWithTag("Player22").GetComponentInChildren<AudioSource>().Play();
             Destroy(this.gameObject);
