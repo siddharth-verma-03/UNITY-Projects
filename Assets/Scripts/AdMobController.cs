@@ -16,6 +16,7 @@ public class AdMobController : MonoBehaviour
     public GameObject deathCanvas;
     public GameStart gameStart;
     public EndGame endGame;
+    private bool isAdLoaded = false;
 
     public AudioSource audioSource;
 
@@ -151,24 +152,6 @@ public class AdMobController : MonoBehaviour
     /// <summary>
     /// Shows the interstitial ad.
     /// </summary>
-    public void ShowInterstitialAd()
-    {
-        LoadInterstitialAd();
-        if (_interstitialAd != null && _interstitialAd.CanShowAd())
-        {
-            Debug.Log("Showing interstitial ad.");
-            _interstitialAd.Show();
-        }
-        else
-        {
-            Debug.LogError("Interstitial ad is not ready yet.");
-        }
-    }
-
-
-    /// <summary>
-    /// Loads the interstitial ad.
-    /// </summary>
     public void LoadInterstitialAd()
     {
         // Clean up the old ad before loading a new one.
@@ -178,34 +161,61 @@ public class AdMobController : MonoBehaviour
             _interstitialAd = null;
         }
 
+        isAdLoaded = false;
         Debug.Log("Loading the interstitial ad.");
 
-       
-        // create our request used to load the ad.
+        // Create ad request.
         var adRequest = new AdRequest();
+        adRequest.Keywords.Add("unity-admob-sample");
 
-        // send the request to load the ad.
-        InterstitialAd.Load(intId, adRequest,
-            (InterstitialAd ad, LoadAdError error) =>
+        // Load ad
+        InterstitialAd.Load(intId, adRequest, (InterstitialAd ad, LoadAdError error) =>
+        {
+            if (error != null || ad == null)
             {
-                // if error is not null, the load request failed.
-                if (error != null || ad == null)
-                {
-                    Debug.LogError("interstitial ad failed to load an ad " +
-                                   "with error : " + error);
-                    return;
-                }
+                Debug.LogError("Interstitial ad failed to load: " + error);
+                return;
+            }
 
-                Debug.Log("Interstitial ad loaded with response : "
-                          + ad.GetResponseInfo());
+            Debug.Log("Interstitial ad loaded successfully.");
+            _interstitialAd = ad;
+            isAdLoaded = true;
+            RegisterEventHandlers(_interstitialAd);
+        });
+    }
 
-                _interstitialAd = ad;
-                RegisterEventHandlers(_interstitialAd);
-            });
+    public void ShowInterstitialAd()
+    {
+        StartCoroutine(WaitForAdToLoadAndShowInterstitial());
+    }
+
+    private IEnumerator WaitForAdToLoadAndShowInterstitial()
+    {
+        if (!isAdLoaded)
+        {
+            Debug.Log("Waiting for interstitial ad to load...");
+            LoadInterstitialAd();
+        }
+
+        while (!isAdLoaded)
+        {
+            yield return null; // Wait until the ad is loaded.
+        }
+
+        if (_interstitialAd != null && _interstitialAd.CanShowAd())
+        {
+            Debug.Log("Showing interstitial ad.");
+            _interstitialAd.Show();
+        }
+        else
+        {
+            Debug.LogError("Interstitial ad is not ready.");
+        }
     }
 
 
-    private void RegisterEventHandlers(InterstitialAd interstitialAd)
+
+private void RegisterEventHandlers(InterstitialAd interstitialAd)
     {
         // Raised when the ad is estimated to have earned money.
         interstitialAd.OnAdPaid += (AdValue adValue) =>
@@ -262,47 +272,63 @@ public class AdMobController : MonoBehaviour
             _rewardedAd = null;
         }
 
+        isAdLoaded = false;
         Debug.Log("Loading the rewarded ad.");
 
-        // create our request used to load the ad.
+        // Create ad request.
         var adRequest = new AdRequest();
+        adRequest.Keywords.Add("unity-admob-sample");
 
-        // send the request to load the ad.
-        RewardedAd.Load(rewardId, adRequest,
-            (RewardedAd ad, LoadAdError error) =>
+        // Load ad
+        RewardedAd.Load(rewardId, adRequest, (RewardedAd ad, LoadAdError error) =>
+        {
+            if (error != null || ad == null)
             {
-                // if error is not null, the load request failed.
-                if (error != null || ad == null)
-                {
-                    Debug.LogError("Rewarded ad failed to load an ad " +
-                                   "with error : " + error);
-                    return;
-                }
+                Debug.LogError("Rewarded ad failed to load: " + error);
+                return;
+            }
 
-                Debug.Log("Rewarded ad loaded with response : "
-                          + ad.GetResponseInfo());
-
-                _rewardedAd = ad;
-                RegisterEventHandlers(_rewardedAd);
-            });
+            Debug.Log("Rewarded ad loaded successfully.");
+            _rewardedAd = ad;
+            isAdLoaded = true;
+            RegisterEventHandlers(_rewardedAd);
+        });
     }
-
 
     public void ShowRewardedAd()
     {
-        LoadRewardedAd();
-        const string rewardMsg = "Rewarded ad rewarded the user. Type: {0}, amount: {1}.";
+        StartCoroutine(WaitForAdToLoadAndShow());
+    }
+
+    private IEnumerator WaitForAdToLoadAndShow()
+    {
+        if (!isAdLoaded)
+        {
+            Debug.Log("Waiting for ad to load...");
+            LoadRewardedAd();
+        }
+
+        while (!isAdLoaded)
+        {
+            yield return null; // Wait until the ad is loaded.
+        }
 
         if (_rewardedAd != null && _rewardedAd.CanShowAd())
         {
             _rewardedAd.Show((Reward reward) =>
             {
                 isReward = true;
+                Debug.Log($"Rewarded ad rewarded the user. Type: {reward.Type}, amount: {reward.Amount}.");
             });
         }
+        else
+        {
+            Debug.LogError("Rewarded ad is not ready.");
+        }
+    
     }
 
-    private void RegisterEventHandlers(RewardedAd ad)
+private void RegisterEventHandlers(RewardedAd ad)
     {
         // Raised when the ad is estimated to have earned money.
         ad.OnAdPaid += (AdValue adValue) =>
@@ -333,6 +359,7 @@ public class AdMobController : MonoBehaviour
             if (isReward)
             {
                 StartCoroutine(getHimReward());
+                isAdLoaded = false;
             }
             audioSource.Play();
             Debug.Log("Rewarded ad full screen content closed.");
