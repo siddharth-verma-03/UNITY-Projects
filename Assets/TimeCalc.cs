@@ -11,7 +11,7 @@ public class TimeCalc : MonoBehaviour
     private float scoreSpeed = 25f;
     public void Reseto()
     {
-        textMeshProUGUI.text = "0 meter";
+        textMeshProUGUI.text = "0";
     }
     // Update is called once per frame
     void OnEnable()
@@ -22,6 +22,6 @@ public class TimeCalc : MonoBehaviour
     void FixedUpdate()
     {
         score += Time.fixedDeltaTime * scoreSpeed;  // Accumulate fractional values
-        textMeshProUGUI.text = ((int)score).ToString() + " meter";  // Only update integer value
+        textMeshProUGUI.text = ((int)score).ToString();  // Only update integer value
     }
 }
