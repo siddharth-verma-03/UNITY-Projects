@@ -50,9 +50,23 @@ public class EndGame : MonoBehaviour
             }
         }
         GameObject.FindObjectOfType<SwipeMovement>().enabled = false;
+        SaveHighScore(int.Parse(GameObject.FindGameObjectWithTag("Timer").GetComponent<TimeCalc>().textMeshProUGUI.text.Split(" ")[0]));
         Died.gameObject.SetActive(true);
         this.GetComponent<EndGame>().enabled=false;
 
 
+    }
+
+
+    public void SaveHighScore(int score)
+    {
+        int currentHighScore = PlayerPrefs.GetInt("HighScore", 0);
+
+        if (score > currentHighScore)
+        {
+            PlayerPrefs.SetInt("HighScore", score);
+            PlayerPrefs.Save();
+            Debug.Log("New High Score Saved: " + score);
+        }
     }
 }

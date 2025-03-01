@@ -375,12 +375,13 @@ private void RegisterEventHandlers(RewardedAd ad)
     IEnumerator getHimReward()
     {
         deathCanvas.SetActive(false);
-        gameStart.GameShuru();
+        gameStart.GameShuruAfterAD();
         yield return new WaitForSeconds(0.2f);
         SwipeObj.resetPosition();
         playerSpawn.SpawnMultipleObjects(3);
 
         GameObject.FindObjectOfType<SwipeMovement>().enabled = true;
+        GameObject.FindGameObjectWithTag("Timer").GetComponent<TimeCalc>().enabled = true;
         endGame.enabled = true;
         isReward = false;
     }

@@ -2,14 +2,26 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 
 public class TimeCalc : MonoBehaviour
 {
    public TextMeshProUGUI textMeshProUGUI;
-
-    // Update is called once per frame
-    void Update()
+    private float score = 0f;
+    private float scoreSpeed = 25f;
+    public void Reseto()
     {
-        textMeshProUGUI.text=( (int.Parse(textMeshProUGUI.text.Split(" ")[0])+(int)(Time.fixedDeltaTime*100))).ToString()+" meter";
+        textMeshProUGUI.text = "0 meter";
+    }
+    // Update is called once per frame
+    void OnEnable()
+    {
+        score = int.Parse(textMeshProUGUI.text.Split(" ")[0]);  // Initialize score from UI
+    }
+
+    void FixedUpdate()
+    {
+        score += Time.fixedDeltaTime * scoreSpeed;  // Accumulate fractional values
+        textMeshProUGUI.text = ((int)score).ToString() + " meter";  // Only update integer value
     }
 }
