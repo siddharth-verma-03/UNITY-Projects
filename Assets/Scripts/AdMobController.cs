@@ -379,7 +379,6 @@ private void RegisterEventHandlers(RewardedAd ad)
         yield return new WaitForSeconds(0.2f);
         SwipeObj.resetPosition();
         playerSpawn.SpawnMultipleObjects(3);
-
         GameObject.FindObjectOfType<SwipeMovement>().enabled = true;
         GameObject.FindGameObjectWithTag("Timer").GetComponent<TimeCalc>().enabled = true;
         endGame.enabled = true;
