@@ -374,15 +374,63 @@ private void RegisterEventHandlers(RewardedAd ad)
 
     IEnumerator getHimReward()
     {
+        yield return new WaitForSeconds(0.2f);
         deathCanvas.SetActive(false);
         gameStart.GameShuruAfterAD();
         yield return new WaitForSeconds(0.2f);
+
         SwipeObj.resetPosition();
         playerSpawn.SpawnMultipleObjects(3);
         GameObject.FindObjectOfType<SwipeMovement>().enabled = true;
         GameObject.FindGameObjectWithTag("Timer").GetComponent<TimeCalc>().enabled = true;
         endGame.enabled = true;
         isReward = false;
+
+        // Find all GameObjects with tag "Player22"
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player22");
+
+        // Disable Capsule Colliders and start blinking effect
+        foreach (GameObject player in players)
+        {
+            player.layer = 12;
+            player.transform.parent.gameObject.layer = 12;
+        }
+
+        StartFighting[] sf = FindObjectsOfType<StartFighting>(true);
+        foreach(StartFighting sfo in sf)
+        {
+            sfo.enabled = false;
+        }
+        float blinkDuration = 2f;
+        float elapsedTime = 0f;
+        bool isActive = true;
+
+        while (elapsedTime < blinkDuration)
+        {
+            foreach (GameObject player in players)
+            {
+                player.GetComponent<Rigidbody>().AddForce(new Vector3(0, -1, 0) * 20, ForceMode.Acceleration);
+                player.SetActive(isActive);
+
+            }
+
+            isActive = !isActive;
+            yield return new WaitForSeconds(0.2f);
+            elapsedTime += 0.2f;
+        }
+
+        // Ensure all players are active and enable their colliders
+        foreach (GameObject player in players)
+        {
+            player.SetActive(true);
+            player.layer = 8;
+            player.transform.parent.gameObject.layer = 0;
+        }
+        foreach (StartFighting sfo in sf)
+        {
+            sfo.enabled = true;
+        }
     }
+
 
 }

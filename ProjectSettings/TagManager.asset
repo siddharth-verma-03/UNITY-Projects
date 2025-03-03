@@ -34,9 +34,9 @@ TagManager:
   - Magnet
   - Obstacle
   - Wall
-  - 
-  - 
-  - 
+  - IgnorePhysics
+  - Ground
+  - WallIgnore
   - 
   - 
   - 

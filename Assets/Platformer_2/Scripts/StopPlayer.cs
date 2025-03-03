@@ -9,8 +9,7 @@ public class StopPlayer : MonoBehaviour
        
         if (other.gameObject.tag == "Player22")
         {
-           
-            
+
             other.gameObject.GetComponent<CapsuleCollider>().isTrigger = true;
   
         }

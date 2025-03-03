@@ -12,11 +12,11 @@ public class KillMe : MonoBehaviour
        {
            this.gameObject.layer = 8;
        }*/
-    private void FixedUpdate()
+/*    private void FixedUpdate()
     {
         this.gameObject.layer = 8;
     }
-
+*/
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("Obstacle"))
