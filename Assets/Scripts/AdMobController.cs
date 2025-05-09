@@ -1,0 +1,436 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using GoogleMobileAds.Api;
+using UnityEngine;
+
+public class AdMobController : MonoBehaviour
+{
+
+    public string adId= "ca-app-pub-3940256099942544~3347511713";
+    public Events ev;
+
+    public SwipeMovement SwipeObj;
+    public PlayerSpawn playerSpawn;
+
+    public GameObject deathCanvas;
+    public GameStart gameStart;
+    public EndGame endGame;
+    private bool isAdLoaded = false;
+
+    public AudioSource audioSource;
+
+#if UNITY_ANDROID
+    string bannerId= "ca-app-pub-3940256099942544/6300978111";
+     string intId= "ca-app-pub-3940256099942544/1033173712";
+    string rewardId = "ca-app-pub-3940256099942544/5224354917";
+
+
+
+
+    /*    #elif UNITY_IPHONE
+     string bannerId="";
+     string intId="";
+    string rewardId = "";*/
+
+#endif
+
+    BannerView _bannerView;
+    InterstitialAd _interstitialAd;
+    RewardedAd _rewardedAd;
+
+    bool isReward=false;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        MobileAds.RaiseAdEventsOnUnityMainThread = true;
+        MobileAds.Initialize(initStatus => {
+
+            Debug.Log("Ads Intialised");
+            
+        });
+
+        LoadAd();
+    }
+
+    public void LoadAd()
+    {
+        // create an instance of a banner view first.
+        if (_bannerView == null)
+        {
+            CreateBannerView();
+        }
+
+        ListenToAdEvents();
+        // create our request used to load the ad.
+        var adRequest = new AdRequest();
+        adRequest.Keywords.Add("unity-admob-sample");
+        // send the request to load the ad.
+        Debug.Log("Loading banner ad.");
+        _bannerView.LoadAd(adRequest);
+    }
+
+    /// <summary>
+    /// Creates a 320x50 banner view at top of the screen.
+    /// </summary>
+    public void CreateBannerView()
+    {
+        Debug.Log("Creating banner view");
+
+        // If we already have a banner, destroy the old one.
+        if (_bannerView != null)
+        {
+            DestroyAd();
+        }
+
+        AdSize adaptiveSize = AdSize.GetCurrentOrientationAnchoredAdaptiveBannerAdSizeWithWidth(AdSize.FullWidth);
+
+        // Create a 320x50 banner at top of the screen
+        _bannerView = new BannerView(bannerId, adaptiveSize, AdPosition.Bottom);
+    }
+
+
+    public void DestroyAd()
+    {
+        if (_bannerView != null)
+        {
+            Debug.Log("Destroying banner view.");
+            _bannerView.Destroy();
+            _bannerView = null;
+        }
+    }
+
+    // Update is called once per frame
+    /// <summary>
+    /// listen to events the banner view may raise.
+    /// </summary>
+    private void ListenToAdEvents()
+    {
+        // Raised when an ad is loaded into the banner view.
+        _bannerView.OnBannerAdLoaded += () =>
+        {
+            Debug.Log("Banner view loaded an ad with response : "
+                + _bannerView.GetResponseInfo());
+        };
+        // Raised when an ad fails to load into the banner view.
+        _bannerView.OnBannerAdLoadFailed += (LoadAdError error) =>
+        {
+            Debug.LogError("Banner view failed to load an ad with error : "
+                + error);
+        };
+        // Raised when the ad is estimated to have earned money.
+        _bannerView.OnAdPaid += (AdValue adValue) =>
+        {
+            Debug.Log(String.Format("Banner view paid {0} {1}.",
+                adValue.Value,
+                adValue.CurrencyCode));
+        };
+        // Raised when an impression is recorded for an ad.
+        _bannerView.OnAdImpressionRecorded += () =>
+        {
+            Debug.Log("Banner view recorded an impression.");
+        };
+        // Raised when a click is recorded for an ad.
+        _bannerView.OnAdClicked += () =>
+        {
+            Debug.Log("Banner view was clicked.");
+        };
+        // Raised when an ad opened full screen content.
+        _bannerView.OnAdFullScreenContentOpened += () =>
+        {
+            Debug.Log("Banner view full screen content opened.");
+        };
+        // Raised when the ad closed full screen content.
+        _bannerView.OnAdFullScreenContentClosed += () =>
+        {
+            Debug.Log("Banner view full screen content closed.");
+        };
+    }
+
+
+    /// <summary>
+    /// Shows the interstitial ad.
+    /// </summary>
+    public void LoadInterstitialAd()
+    {
+        // Clean up the old ad before loading a new one.
+        if (_interstitialAd != null)
+        {
+            _interstitialAd.Destroy();
+            _interstitialAd = null;
+        }
+
+        isAdLoaded = false;
+        Debug.Log("Loading the interstitial ad.");
+
+        // Create ad request.
+        var adRequest = new AdRequest();
+        adRequest.Keywords.Add("unity-admob-sample");
+
+        // Load ad
+        InterstitialAd.Load(intId, adRequest, (InterstitialAd ad, LoadAdError error) =>
+        {
+            if (error != null || ad == null)
+            {
+                Debug.LogError("Interstitial ad failed to load: " + error);
+                return;
+            }
+
+            Debug.Log("Interstitial ad loaded successfully.");
+            _interstitialAd = ad;
+            isAdLoaded = true;
+            RegisterEventHandlers(_interstitialAd);
+        });
+    }
+
+    public void ShowInterstitialAd()
+    {
+        StartCoroutine(WaitForAdToLoadAndShowInterstitial());
+    }
+
+    private IEnumerator WaitForAdToLoadAndShowInterstitial()
+    {
+        if (!isAdLoaded)
+        {
+            Debug.Log("Waiting for interstitial ad to load...");
+            LoadInterstitialAd();
+        }
+
+        while (!isAdLoaded)
+        {
+            yield return null; // Wait until the ad is loaded.
+        }
+
+        if (_interstitialAd != null && _interstitialAd.CanShowAd())
+        {
+            Debug.Log("Showing interstitial ad.");
+            _interstitialAd.Show();
+        }
+        else
+        {
+            Debug.LogError("Interstitial ad is not ready.");
+        }
+    }
+
+
+
+private void RegisterEventHandlers(InterstitialAd interstitialAd)
+    {
+        // Raised when the ad is estimated to have earned money.
+        interstitialAd.OnAdPaid += (AdValue adValue) =>
+        {
+            Debug.Log(String.Format("Interstitial ad paid {0} {1}.",
+                adValue.Value,
+                adValue.CurrencyCode));
+        };
+        // Raised when an impression is recorded for an ad.
+        interstitialAd.OnAdImpressionRecorded += () =>
+        {
+            Debug.Log("Interstitial ad recorded an impression.");
+        };
+        // Raised when a click is recorded for an ad.
+        interstitialAd.OnAdClicked += () =>
+        {
+            Debug.Log("Interstitial ad was clicked.");
+        };
+        // Raised when an ad opened full screen content.
+        interstitialAd.OnAdFullScreenContentOpened += () =>
+        {
+            audioSource.Pause();
+            Debug.Log("Interstitial ad full screen content opened.");
+        };
+        // Raised when the ad closed full screen content.
+        interstitialAd.OnAdFullScreenContentClosed += () =>
+        {
+            Debug.Log("Interstitial ad full screen content closed.");
+            audioSource.Play();
+            ev.Play();
+        };
+        // Raised when the ad failed to open full screen content.
+        interstitialAd.OnAdFullScreenContentFailed += (AdError error) =>
+        {
+            Debug.LogError("Interstitial ad failed to open full screen content " +
+                           "with error : " + error);
+        };
+
+/*
+        interstitialAd.onAdClosed += () =>
+        {
+
+        };*/
+    }
+
+
+
+    public void LoadRewardedAd()
+    {
+        // Clean up the old ad before loading a new one.
+        if (_rewardedAd != null)
+        {
+            _rewardedAd.Destroy();
+            _rewardedAd = null;
+        }
+
+        isAdLoaded = false;
+        Debug.Log("Loading the rewarded ad.");
+
+        // Create ad request.
+        var adRequest = new AdRequest();
+        adRequest.Keywords.Add("unity-admob-sample");
+
+        // Load ad
+        RewardedAd.Load(rewardId, adRequest, (RewardedAd ad, LoadAdError error) =>
+        {
+            if (error != null || ad == null)
+            {
+                Debug.LogError("Rewarded ad failed to load: " + error);
+                return;
+            }
+
+            Debug.Log("Rewarded ad loaded successfully.");
+            _rewardedAd = ad;
+            isAdLoaded = true;
+            RegisterEventHandlers(_rewardedAd);
+        });
+    }
+
+    public void ShowRewardedAd()
+    {
+        StartCoroutine(WaitForAdToLoadAndShow());
+    }
+
+    private IEnumerator WaitForAdToLoadAndShow()
+    {
+        if (!isAdLoaded)
+        {
+            Debug.Log("Waiting for ad to load...");
+            LoadRewardedAd();
+        }
+
+        while (!isAdLoaded)
+        {
+            yield return null; // Wait until the ad is loaded.
+        }
+
+        if (_rewardedAd != null && _rewardedAd.CanShowAd())
+        {
+            _rewardedAd.Show((Reward reward) =>
+            {
+                isReward = true;
+                Debug.Log($"Rewarded ad rewarded the user. Type: {reward.Type}, amount: {reward.Amount}.");
+            });
+        }
+        else
+        {
+            Debug.LogError("Rewarded ad is not ready.");
+        }
+    
+    }
+
+private void RegisterEventHandlers(RewardedAd ad)
+    {
+        // Raised when the ad is estimated to have earned money.
+        ad.OnAdPaid += (AdValue adValue) =>
+        {
+            Debug.Log(String.Format("Rewarded ad paid {0} {1}.",
+                adValue.Value,
+                adValue.CurrencyCode));
+        };
+        // Raised when an impression is recorded for an ad.
+        ad.OnAdImpressionRecorded += () =>
+        {
+            Debug.Log("Rewarded ad recorded an impression.");
+        };
+        // Raised when a click is recorded for an ad.
+        ad.OnAdClicked += () =>
+        {
+            Debug.Log("Rewarded ad was clicked.");
+        };
+        // Raised when an ad opened full screen content.
+        ad.OnAdFullScreenContentOpened += () =>
+        {
+            audioSource.Pause();
+            Debug.Log("Rewarded ad full screen content opened.");
+        };
+        // Raised when the ad closed full screen content.
+        ad.OnAdFullScreenContentClosed += () =>
+        {
+            if (isReward)
+            {
+                StartCoroutine(getHimReward());
+                isAdLoaded = false;
+            }
+            audioSource.Play();
+            Debug.Log("Rewarded ad full screen content closed.");
+        };
+        // Raised when the ad failed to open full screen content.
+        ad.OnAdFullScreenContentFailed += (AdError error) =>
+        {
+            Debug.LogError("Rewarded ad failed to open full screen content " +
+                           "with error : " + error);
+        };
+    }
+
+    IEnumerator getHimReward()
+    {
+        yield return new WaitForSeconds(0.2f);
+        deathCanvas.SetActive(false);
+        gameStart.GameShuruAfterAD();
+        yield return new WaitForSeconds(0.2f);
+
+        SwipeObj.resetPosition();
+        playerSpawn.SpawnMultipleObjects(3);
+        GameObject.FindObjectOfType<SwipeMovement>().enabled = true;
+        GameObject.FindGameObjectWithTag("Timer").GetComponent<TimeCalc>().enabled = true;
+        endGame.enabled = true;
+        isReward = false;
+
+        // Find all GameObjects with tag "Player22"
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player22");
+
+        // Disable Capsule Colliders and start blinking effect
+        foreach (GameObject player in players)
+        {
+            player.layer = 12;
+            player.transform.parent.gameObject.layer = 12;
+        }
+
+        StartFighting[] sf = FindObjectsOfType<StartFighting>(true);
+        foreach(StartFighting sfo in sf)
+        {
+            sfo.enabled = false;
+        }
+        float blinkDuration = 2f;
+        float elapsedTime = 0f;
+        bool isActive = true;
+
+        while (elapsedTime < blinkDuration)
+        {
+            foreach (GameObject player in players)
+            {
+                player.GetComponent<Rigidbody>().AddForce(new Vector3(0, -1, 0) * 20, ForceMode.Acceleration);
+                player.SetActive(isActive);
+
+            }
+
+            isActive = !isActive;
+            yield return new WaitForSeconds(0.2f);
+            elapsedTime += 0.2f;
+        }
+
+        // Ensure all players are active and enable their colliders
+        foreach (GameObject player in players)
+        {
+            player.SetActive(true);
+            player.layer = 8;
+            player.transform.parent.gameObject.layer = 0;
+        }
+        foreach (StartFighting sfo in sf)
+        {
+            sfo.enabled = true;
+        }
+    }
+
+
+}
